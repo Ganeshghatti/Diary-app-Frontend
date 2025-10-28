@@ -1,3 +1,4 @@
+import { toastConfig } from "@/config/toastConfig";
 import MaskedView from "@react-native-masked-view/masked-view";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -12,11 +13,15 @@ import {
   Text,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import OtpInput from "../../components/ui/OtpInput";
 import PhoneInput from "../../components/ui/PhoneInput";
 import PrimaryButton from "../../components/ui/PrimaryButton";
+import { useAuth } from "../../providers/AuthProvider";
+import { requestOTP, verifyOTP } from "../../services/authService";
 
 export default function SignIn() {
+  const { setUser } = useAuth();
   const [phone, setPhone] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [code, setCode] = useState("");
@@ -90,16 +95,77 @@ export default function SignIn() {
   }, [imageOpacity, imageHeight, imageMarginTop, contentTranslateY]);
 
   const onGetStarted = async () => {
-    if (phone.length < 10) return;
-    if (!showOtp) {
-      setShowOtp(true);
+    if (phone.length < 10) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Phone Number",
+        text2: "Phone number must be 10 digits",
+        position: "top",
+      });
       return;
     }
-    // For the dummy flow, accept any 4-digit code and continue
-    if (code.replace(/\s/g, "").length === 4) {
+
+    if (!showOtp) {
+      // Request OTP
       setBusy(true);
-      router.replace("/onboarding" as any);
+      const result = await requestOTP(phone);
       setBusy(false);
+
+      if (result.success) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: result.message,
+          position: "top",
+        });
+        setShowOtp(true);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: result.error,
+          position: "top",
+        });
+      }
+      return;
+    }
+
+    // Verify OTP - now expects 6 digits
+    if (code.length === 6) {
+      setBusy(true);
+      const result = await verifyOTP(phone, code);
+      setBusy(false);
+
+      if (result.success) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: result.message,
+          position: "top",
+        });
+
+        // Set user in AuthProvider
+        setUser(result.phone || phone);
+
+        // Route based on newly_created flag
+        // Wait a moment for toast to show, then navigate
+        setTimeout(() => {
+          if (result.newlyCreated) {
+            // New user - go to onboarding
+            router.replace("/onboarding" as any);
+          } else {
+            // Existing user - go to home
+            router.replace("/(app)/home" as any);
+          }
+        }, 500);
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: result.error,
+          position: "top",
+        });
+      }
     }
   };
 
@@ -174,7 +240,7 @@ export default function SignIn() {
               className="mt-6 text-center text-[16px] text-white/60"
               style={{ fontFamily: "Satoshi-Medium" }}
             >
-              {`Enter the 4 digit verification code \nsent to your number`}
+              {`Enter the 6 digit verification code \nsent to your number`}
             </Text>
 
             <View className="mt-4 flex-row items-center justify-center">
@@ -220,7 +286,7 @@ export default function SignIn() {
               </View>
             </View>
 
-            <OtpInput value={code} onChangeText={setCode} length={4} />
+            <OtpInput value={code} onChangeText={setCode} length={6} />
           </>
         )}
 
@@ -230,11 +296,7 @@ export default function SignIn() {
               busy ? "Please wait…" : showOtp ? "Verify OTP" : "Get Started"
             }
             onPress={onGetStarted}
-            disabled={
-              busy ||
-              phone.length < 10 ||
-              (showOtp && code.replace(/\s/g, "").length < 4)
-            }
+            disabled={busy || phone.length < 10 || (showOtp && code.length < 6)}
           />
         </View>
 
@@ -254,6 +316,7 @@ export default function SignIn() {
           </Text>
         </View> */}
       </Animated.View>
+      <Toast config={toastConfig} />
     </ImageBackground>
   );
 }

@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import React, {
   createContext,
   useContext,
@@ -5,6 +7,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { getAuthToken, logout } from "../services/authService";
 import type { AuthState, User } from "../types/auth";
 
 type AuthContextType = {
@@ -12,6 +15,7 @@ type AuthContextType = {
   sendOtp: (phone: string) => Promise<{ success: boolean; otp: string }>;
   verifyOtp: (phone: string, code: string) => Promise<boolean>;
   signOut: () => Promise<void>;
+  setUser: (phone: string) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,8 +28,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [state, setState] = useState<AuthState>({ user: null, loading: true });
 
   useEffect(() => {
-    // No persistence to restore; just stop loading.
-    setState((s) => ({ ...s, loading: false }));
+    // Restore user session from AsyncStorage
+    const restoreUser = async () => {
+      try {
+        const token = await getAuthToken();
+        const phone = await AsyncStorage.getItem("userPhone");
+
+        if (token && phone) {
+          const user: User = {
+            id: phone,
+            phone,
+          };
+          setState({ user, loading: false });
+        } else {
+          setState({ user: null, loading: false });
+        }
+      } catch (error) {
+        console.error("Error restoring user:", error);
+        setState({ user: null, loading: false });
+      }
+    };
+
+    restoreUser();
   }, []);
 
   const sendOtp = async (phone: string) => {
@@ -53,12 +77,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signOut = async () => {
-    // No persistence to clear.
+    // Clear AsyncStorage tokens and user data
+    await logout();
+    // Update state
     setState({ user: null, loading: false });
+    // Navigate to sign-in page
+    router.replace("/(auth)/sign-in");
+  };
+
+  const setUser = (phone: string) => {
+    const user: User = {
+      id: phone,
+      phone,
+    };
+    setState({ user, loading: false });
   };
 
   const value = useMemo<AuthContextType>(
-    () => ({ state, sendOtp, verifyOtp, signOut }),
+    () => ({ state, sendOtp, verifyOtp, signOut, setUser }),
     [state]
   );
 
