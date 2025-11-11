@@ -1,8 +1,9 @@
 import axios from "axios";
+import { API_BASE_URL } from "../constants/api";
 
 // Create axios instance with base URL
 const api = axios.create({
-  baseURL: "https://backend.diarydad.me",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -30,17 +31,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Handle common errors here
-    if (error.response) {
-      // Server responded with error
-      console.error("API Error:", error.response.data);
-    } else if (error.request) {
-      // Request made but no response
-      console.error("Network Error:", error.message);
-    } else {
-      // Something else happened
-      console.error("Error:", error.message);
-    }
+    // Silently handle errors - let individual services handle error logging if needed
     return Promise.reject(error);
   }
 );

@@ -1,3 +1,4 @@
+import { toastConfig } from "@/config/toastConfig";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -7,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const onboardingSteps = [
   {
@@ -156,6 +158,7 @@ export default function Onboarding() {
           </View>
         </View>
       </ImageBackground>
+      <Toast config={toastConfig} />
     </View>
   );
 }

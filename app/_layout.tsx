@@ -3,6 +3,7 @@ import { Slot } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { LogBox, Text, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
 import { AuthProvider } from "../providers/AuthProvider";
 
@@ -58,8 +59,10 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <Slot />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <Slot />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }

@@ -25,10 +25,21 @@ export const requestOTP = async (phone: string) => {
 // Verify OTP API
 export const verifyOTP = async (phone: string, otp: string) => {
   try {
-    const response = await api.post("/auth/verify-otp", {
-      phone: phone,
-      otp: otp,
-    });
+    // Get user's timezone
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    const response = await api.post(
+      "/auth/verify-otp",
+      {
+        phone: phone,
+        otp: otp,
+      },
+      {
+        headers: {
+          "X-Timezone": timezone,
+        },
+      }
+    );
 
     // Store the token and user data
     if (response.data.token) {

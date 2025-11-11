@@ -10,8 +10,8 @@ export default function AppLayout() {
         tabBarStyle: {
           backgroundColor: "#3A3A3A",
           borderTopWidth: 0,
-          height: 70,
-          paddingBottom: 10,
+          height: 90,
+          paddingBottom: 20,
           paddingTop: 10,
         },
         tabBarActiveTintColor: "#F4B514",
@@ -27,8 +27,12 @@ export default function AppLayout() {
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={24} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size ?? 24}
+              color={color}
+            />
           ),
         }}
       />
@@ -36,18 +40,56 @@ export default function AppLayout() {
         name="archive"
         options={{
           title: "Archive",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="book-outline" size={24} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "archive" : "archive-outline"}
+              size={size ?? 26}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: "Search",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="search-outline" size={24} color={color} />
+          title: "Diary Chat",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "chatbubbles" : "chatbubbles-outline"}
+              size={size ?? 24}
+              color={color}
+            />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="my-account"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="profile-details"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="expense-tracker"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="mood-tracker"
+        options={{
+          href: null, // Hide from tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="health-tracker"
+        options={{
+          href: null, // Hide from tab bar
         }}
       />
     </Tabs>
